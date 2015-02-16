@@ -1,4 +1,7 @@
 package com.stocktrak;
+import com.stocktrak.transactional.AccountCash;
+import com.stocktrak.transactional.Transaction;
+
 import java.util.concurrent.LinkedBlockingQueue;
 
 /**
@@ -8,6 +11,7 @@ public class AnalysisProcess {
 
     public static final LinkedBlockingQueue<Transaction> transactionQueue = new LinkedBlockingQueue();
     public static final AccountCash accountCash = new AccountCash();
+    public static final Integer BUFFER_SIZE = 20;
 
     public AnalysisProcess() {
     }

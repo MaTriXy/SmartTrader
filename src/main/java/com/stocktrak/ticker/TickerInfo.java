@@ -1,4 +1,4 @@
-package com.stocktrak;
+package com.stocktrak.ticker;
 
 import java.sql.Time;
 

@@ -1,6 +1,8 @@
 package com.stocktrak;
 
 import com.gargoylesoftware.htmlunit.ElementNotFoundException;
+import com.stocktrak.transactional.AccountCash;
+import com.stocktrak.transactional.Transaction;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;

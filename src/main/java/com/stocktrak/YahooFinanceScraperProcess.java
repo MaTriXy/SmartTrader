@@ -1,5 +1,10 @@
 package com.stocktrak;
 
+import com.stocktrak.transactional.AccountCash;
+import com.stocktrak.transactional.Transaction;
+import com.stocktrak.ticker.TickerInfo;
+import com.stocktrak.ticker.TickerMap;
+
 import java.io.*;
 import java.net.URL;
 import java.text.ParseException;
@@ -21,10 +26,10 @@ public class YahooFinanceScraperProcess extends Thread {
     private Queue<Transaction> transactionQueue = AnalysisProcess.transactionQueue;
     private AccountCash accountCash = AnalysisProcess.accountCash;
     private Set<String> symbols;
-    private HashMap<String, List<TickerInfo>> stockData;
+    private TickerMap stockData;
 
     public YahooFinanceScraperProcess() {
-        stockData = new HashMap();
+        stockData = new TickerMap(AnalysisProcess.BUFFER_SIZE);
         symbols = new HashSet();
     }
 
@@ -87,19 +92,16 @@ public class YahooFinanceScraperProcess extends Thread {
             while(scanner.hasNext()) {
                 String next = scanner.next();
                 String[] row = next.split(",");
-                if(stockData.get(row[0]) == null) {
-                    stockData.put(row[0], new ArrayList<TickerInfo>());
-                }
                 SimpleDateFormat sdf = new SimpleDateFormat(TIME_DATE_PATTERN);
                 Date date = sdf.parse(row[2] + " " + row[3]);
                 long unixTime = date.getTime();
+                String symbol = row[0];
                 double price = Double.parseDouble(row[1]);
                 double change = Double.parseDouble(row[4]);
                 int volume = Integer.parseInt(row[7]);
                 double dayHigh = Double.parseDouble(row[5]);
                 double dayLow = Double.parseDouble(row[6]);
-                stockData.get(row[0]).add(new TickerInfo(
-                        price, change, volume, dayHigh, dayLow, unixTime));
+                stockData.add(symbol, new TickerInfo(price, change, volume, dayHigh, dayLow, unixTime));
             }
             is.close();
             scanner.close();

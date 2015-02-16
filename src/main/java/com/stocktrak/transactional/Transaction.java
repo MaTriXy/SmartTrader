@@ -1,4 +1,4 @@
-package com.stocktrak;
+package com.stocktrak.transactional;
 
 /**
  * Created by Douglas on 2/14/2015.

@@ -1,12 +1,13 @@
 package com.stocktrak;
-import java.util.concurrent.SynchronousQueue;
+import java.util.concurrent.LinkedBlockingQueue;
 
 /**
  * Created by Douglas on 2/10/2015.
  */
 public class AnalysisProcess {
 
-    public static SynchronousQueue<Purchase> stockQueue = new SynchronousQueue();
+    public static final LinkedBlockingQueue<Transaction> transactionQueue = new LinkedBlockingQueue();
+    public static final AccountCash accountCash = new AccountCash();
 
     public AnalysisProcess() {
     }

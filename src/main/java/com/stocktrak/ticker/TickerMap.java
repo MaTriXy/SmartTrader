@@ -1,6 +1,7 @@
 package com.stocktrak.ticker;
 
 import java.util.HashMap;
+import java.util.Set;
 
 /**
  * Created by Douglas on 2/16/2015.
@@ -11,6 +12,7 @@ public class TickerMap {
     private int bufferSize;
 
     public TickerMap(int bufferSize) {
+        map = new HashMap();
         this.bufferSize = bufferSize;
     }
 
@@ -22,7 +24,16 @@ public class TickerMap {
         map.get(key).add(info);
     }
 
+    @Override
     public String toString() {
         return map.toString();
+    }
+
+    public TickerInfoList get(String symbol) {
+        return map.get(symbol);
+    }
+
+    public Set<String> getTickers() {
+        return map.keySet();
     }
 }

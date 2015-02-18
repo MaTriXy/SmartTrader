@@ -33,9 +33,6 @@ public class TickerInfoList extends ArrayList<TickerInfo> {
         if(size() < maxSize) {
             ret = super.add(tickerInfo);
         }
-
-
         return ret;
     }
 }
-

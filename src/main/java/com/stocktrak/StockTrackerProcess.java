@@ -27,7 +27,9 @@ public class StockTrackerProcess extends Thread {
     private static final String USERNAME = "qcampbell3";
     private static final String PASSWORD = "Dresser5";
 
+    @Override
     public void run() {
+        super.run();
         Calendar cal = Calendar.getInstance();
         Calendar eob = Calendar.getInstance();
         eob.set(2015, Calendar.FEBRUARY, 14, 18, 52);

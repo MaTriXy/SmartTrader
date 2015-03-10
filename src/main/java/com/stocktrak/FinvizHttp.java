@@ -1,5 +1,6 @@
 package com.stocktrak;
 
+import com.google.gson.internal.LinkedHashTreeMap;
 import com.stocktrak.ticker.DJIA;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVRecord;
@@ -24,9 +25,7 @@ import java.lang.reflect.Array;
 import java.net.URL;
 import java.net.URLConnection;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import java.util.*;
 
 public class FinvizHttp {
 	private static final String EMAIL = "qpcamp@gmail.com";
@@ -36,6 +35,7 @@ public class FinvizHttp {
     private static final String DOWNLOAD_DJIA = "export.ashx?v=111&f=idx_dji";
 //    private static final String SESSION_COOKIE = "ASP.NET_SessionId";
 //    private static final String
+    private HashSet<String> tickersStarted;
 
 	private ArrayList<String> tickerSymbol = new ArrayList<String>(); //Symbol
 	private ArrayList<String> tickerName = new ArrayList<String>(); //Company Name
@@ -47,6 +47,7 @@ public class FinvizHttp {
 
 	public FinvizHttp(){
         httpClient = new DefaultHttpClient();
+        tickersStarted = new HashSet();
 	}
 
     public void login() {
@@ -106,12 +107,15 @@ public class FinvizHttp {
             List<CSVRecord> list = parser.getRecords();
             System.out.println(list);
             for(int i = 1; i < list.size(); i++) {
+
                 CSVRecord record = list.get(i);
                 long unixTime = System.currentTimeMillis();
                 FileWriter writer = new FileWriter("src/main/resources/" +
                         record.get(1) + ".csv", true);
-                writer.append(record.get(6)+",");
-                writer.append(record.get(7)+",");
+                if(!tickersStarted.contains(record.get(1))) {
+                    tickersStarted.add(record.get(1));
+                    writer.append("Price,Change,Volume,Time\n");
+                }
                 writer.append(record.get(8)+",");
                 writer.append(record.get(9)+",");
                 writer.append(record.get(10)+",");

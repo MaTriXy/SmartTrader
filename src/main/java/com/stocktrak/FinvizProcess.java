@@ -21,7 +21,7 @@ public class FinvizProcess extends Thread {
         finvizHttp.login();
         while(currentTime() < startOfBusinessDay()){
             try {
-                wait(60000);
+                sleep(60000);
             } catch(InterruptedException e) {
                 System.out.println(e);
             }
@@ -30,7 +30,7 @@ public class FinvizProcess extends Thread {
         while(currentTime() < endOfBusinessDay()){
             try {
                 finvizHttp.downloadDJIA();
-                wait(60000);
+                sleep(60000);
             } catch(InterruptedException e) {
                 System.out.println(e);
             }
@@ -52,7 +52,7 @@ public class FinvizProcess extends Thread {
     public long endOfBusinessDay() {
         Calendar cal = Calendar.getInstance();
         cal.set(Calendar.HOUR_OF_DAY, 16);
-        cal.set(Calendar.MINUTE, 30);
+        cal.set(Calendar.MINUTE, 0);
         cal.set(Calendar.SECOND, 0);
         cal.set(Calendar.MILLISECOND, 0);
         return cal.getTimeInMillis();

@@ -20,6 +20,7 @@ public class FinvizProcess extends Thread {
         FinvizHttp finvizHttp = new FinvizHttp();
         finvizHttp.login();
         while(currentTime() < startOfBusinessDay()){
+            |
             try {
                 sleep(60000);
             } catch(InterruptedException e) {
@@ -34,7 +35,7 @@ public class FinvizProcess extends Thread {
             } catch(InterruptedException e) {
                 System.out.println(e);
             }
-        }
+        }i
     }
 
     public long currentTime() {

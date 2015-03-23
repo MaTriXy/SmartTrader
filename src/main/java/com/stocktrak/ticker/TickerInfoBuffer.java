@@ -50,10 +50,6 @@ public class TickerInfoBuffer implements Iterable<TickerInfo> {
         return previousAnalytics;
     }
 
-    public void setMaxSize(int maxSize) {
-        this.maxSize = maxSize;
-    }
-
     public boolean add(TickerInfo tickerInfo) {
         boolean ret = tickerInfoBuffer.add(tickerInfo);
         if(ret) {
@@ -62,6 +58,10 @@ public class TickerInfoBuffer implements Iterable<TickerInfo> {
             updateAnalytics();
         }
         return ret;
+    }
+
+    public boolean atMaxSize() {
+        return tickerInfoBuffer.size() == tickerInfoBuffer.maxSize();
     }
 
     public TickerInfo get() {
@@ -98,21 +98,15 @@ public class TickerInfoBuffer implements Iterable<TickerInfo> {
     }
 
     @Override
-    public void forEach(Consumer action) {
-
-    }
-
-    @Override
-    public Spliterator spliterator() {
-        return null;
-    }
-
-
-    @Override
     public String toString() {
         return "TickerInfoBuffer{" +
                 "analytics=" + analytics +
                 ", tickerInfoBuffer=" + tickerInfoBuffer +
+                ", currentTickerInfo=" + currentTickerInfo +
+                ", previousTickerInfo=" + previousTickerInfo +
+                ", currentAnalytics=" + currentAnalytics +
+                ", previousAnalytics=" + previousAnalytics +
+                ", maxSize=" + maxSize +
                 '}';
     }
 }

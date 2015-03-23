@@ -25,4 +25,11 @@ public class Cash {
     public synchronized void increaseBy(double increase) {
         cash = cash + increase;
     }
+
+    @Override
+    public String toString() {
+        return "Cash{" +
+                "cash=" + cash +
+                '}';
+    }
 }

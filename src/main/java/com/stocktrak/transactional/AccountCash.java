@@ -41,4 +41,11 @@ public class AccountCash {
         currentCash = new Cash(amount);
     }
 
+    @Override
+    public String toString() {
+        return "AccountCash{" +
+                "currentCash=" + currentCash +
+                ", expectedCash=" + expectedCash +
+                '}';
+    }
 }

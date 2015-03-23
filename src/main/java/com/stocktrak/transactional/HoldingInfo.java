@@ -37,4 +37,13 @@ public class HoldingInfo {
     public void setTotalSaleCost(double totalSaleCost) {
         this.totalSaleCost = totalSaleCost;
     }
+
+    @Override
+    public String toString() {
+        return "HoldingInfo{" +
+                "priceSpent=" + priceSpent +
+                ", totalSaleCost=" + totalSaleCost +
+                ", quantity=" + quantity +
+                '}';
+    }
 }

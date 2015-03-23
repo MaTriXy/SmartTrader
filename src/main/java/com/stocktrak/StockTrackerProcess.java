@@ -35,14 +35,24 @@ public class StockTrackerProcess extends Thread {
         eob.set(2015, Calendar.FEBRUARY, 14, 18, 52);
         WebDriver driver = new FirefoxDriver();
         login(driver, USERNAME, PASSWORD);
+        updatePortfolioValue(driver);
         log(cal.getTime());
-        while(!transactionQueue.isEmpty()) {
-            log(cal.getTime());
-            log(eob.getTime());
+        boolean stop = false;
+        while(!stop) {
+            while (!transactionQueue.isEmpty()) {
+                log(cal.getTime());
+                log(eob.getTime());
+                try {
+                    makeTransaction(driver, transactionQueue.remove());
+                } catch (ElementNotFoundException e) {
+                    log(e.getClass() + ": " + e.getMessage());
+                }
+            }
             try {
-                makeTransaction(driver, transactionQueue.remove());
-            } catch (ElementNotFoundException e) {
-                log(e.getClass() + ": " + e.getMessage());
+                sleep(1000);
+            } catch(InterruptedException e) {
+                log(e);
+                stop = true;
             }
         }
         driver.close();
@@ -58,6 +68,21 @@ public class StockTrackerProcess extends Thread {
         usernameField.sendKeys(USERNAME);
         passwordField.sendKeys(PASSWORD);
         submitLogin.click();
+    }
+
+    private void updatePortfolioValue(WebDriver driver) throws ElementNotFoundException {
+        driver.navigate().to("http://stocktrak.com/private/account/portfolio.aspx");
+
+        Double portfolioValue = Double.parseDouble(
+                driver.findElement(By.xpath("/html/body/form[@id='form1']" +
+                        "/div[@id='wrapper']/div[@class='inner-wrapper']" +
+                        "/div[@class='content bg-pageContent']/div[@class='index']/div[@class='left-col']" +
+                        "/div[@class='introduction-box']/div[@class='content-left']/div[@class='snapshot']" +
+                        "/table[@class='data']/tbody/tr[2]/td[2]"))
+                        .getText().replace("$","").replace(",",""));
+        log("portfolioValue="+portfolioValue);
+        AnalysisProcess.accountCash.setCurrentCash(portfolioValue);
+
     }
 
     private void makeTransaction(WebDriver driver, Transaction transaction) throws ElementNotFoundException {

@@ -12,7 +12,7 @@ import java.util.Calendar;
  * Created by Douglas on 3/9/2015.
  */
 public class FinvizProcess extends Thread {
-    private static final long PERIOD_SIZE = 1000;
+    private static final long PERIOD_SIZE = 60000;
     private static final double DEFAULT_TRADE_PRICE = 160000;
 
     @Override
@@ -39,42 +39,44 @@ public class FinvizProcess extends Thread {
         while((currentTime = currentTime()) < endOfBusinessDay) {
             try {
                 finvizHttp.downloadDJIA();
+                System.out.println(finvizHttp.getTickerMap());
+                determineTransactions(finvizHttp.getTickerMap());
                 sleep(PERIOD_SIZE);
             } catch(InterruptedException e) {
                 System.out.println(e);
             }
         }
-        System.out.println(finvizHttp.getTickerMap());
+
     }
 
     public long currentTime() {
         return Calendar.getInstance().getTimeInMillis();
     }
-//    public long startOfBusinessDay() {
-//        Calendar cal = Calendar.getInstance();
-//        cal.set(Calendar.HOUR_OF_DAY, 19);
-//        cal.set(Calendar.MINUTE, 24);
-//        cal.set(Calendar.SECOND, 0);
-//        cal.set(Calendar.MILLISECOND, 0);
-//        return cal.getTimeInMillis();
-//    }
-//
-//    public long endOfBusinessDay() {
-//        Calendar cal = Calendar.getInstance();
-//        cal.set(Calendar.HOUR_OF_DAY, 19);
-//        cal.set(Calendar.MINUTE, 24);
-//        cal.set(Calendar.SECOND, 30);
-//        cal.set(Calendar.MILLISECOND, 0);
-//        return cal.getTimeInMillis();
-//    }
-
     public long startOfBusinessDay() {
-        return currentTime();
+        Calendar cal = Calendar.getInstance();
+        cal.set(Calendar.HOUR_OF_DAY, 9);
+        cal.set(Calendar.MINUTE, 30);
+        cal.set(Calendar.SECOND, 0);
+        cal.set(Calendar.MILLISECOND, 0);
+        return cal.getTimeInMillis();
     }
 
     public long endOfBusinessDay() {
-        return currentTime() + 20000;
+        Calendar cal = Calendar.getInstance();
+        cal.set(Calendar.HOUR_OF_DAY, 16);
+        cal.set(Calendar.MINUTE, 0);
+        cal.set(Calendar.SECOND, 0);
+        cal.set(Calendar.MILLISECOND, 0);
+        return cal.getTimeInMillis();
     }
+
+//    public long startOfBusinessDay() {
+//        return currentTime();
+//    }
+//
+//    public long endOfBusinessDay() {
+//        return currentTime() + 20000;
+//    }
 
     public ArrayList<Transaction> determineTransactions(TickerMap tickerMap) {
         ArrayList<Transaction> transactionList = new ArrayList();

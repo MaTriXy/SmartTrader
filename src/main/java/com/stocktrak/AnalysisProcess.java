@@ -21,8 +21,8 @@ public class AnalysisProcess {
     }
 
     public static void main(String[] args) {
-//        Thread stockTrackerProcess = new StockTrackerProcess();
-//        stockTrackerProcess.start();
+        Thread stockTrackerProcess = new StockTrackerProcess();
+        stockTrackerProcess.start();
         Thread finvizProcess = new FinvizProcess();
         finvizProcess.start();
     }

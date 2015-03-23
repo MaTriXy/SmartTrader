@@ -37,4 +37,8 @@ public class AccountCash {
         currentCash.increaseBy(increase);
     }
 
+    public synchronized void setCurrentCash(double amount) {
+        currentCash = new Cash(amount);
+    }
+
 }

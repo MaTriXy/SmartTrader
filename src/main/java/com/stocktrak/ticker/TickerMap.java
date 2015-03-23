@@ -8,7 +8,7 @@ import java.util.Set;
  */
 public class TickerMap {
 
-    private HashMap<String, TickerInfoList> map;
+    private HashMap<String, TickerInfoBuffer> map;
     private int bufferSize;
 
     public TickerMap(int bufferSize) {
@@ -18,22 +18,24 @@ public class TickerMap {
 
     public void add(String key, TickerInfo info) {
         if(map.get(key) == null) {
-            map.put(key, new TickerInfoList(bufferSize));
+            map.put(key, new TickerInfoBuffer(bufferSize));
         }
-
         map.get(key).add(info);
     }
 
-    @Override
-    public String toString() {
-        return map.toString();
-    }
-
-    public TickerInfoList get(String symbol) {
+    public TickerInfoBuffer get(String symbol) {
         return map.get(symbol);
     }
 
     public Set<String> getTickers() {
         return map.keySet();
+    }
+
+    @Override
+    public String toString() {
+        return "TickerMap{" +
+                "map=" + map +
+                ", bufferSize=" + bufferSize +
+                '}';
     }
 }

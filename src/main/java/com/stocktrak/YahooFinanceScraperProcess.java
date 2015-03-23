@@ -107,7 +107,7 @@ public class YahooFinanceScraperProcess extends Thread {
                 int volume = Integer.parseInt(row[7]);
                 double dayHigh = Double.parseDouble(row[5]);
                 double dayLow = Double.parseDouble(row[6]);
-                stockData.add(symbol, new TickerInfo(price, change, volume, dayHigh, dayLow, unixTime));
+                stockData.add(symbol, new TickerInfo(price, change, volume, unixTime));
             }
             is.close();
             scanner.close();

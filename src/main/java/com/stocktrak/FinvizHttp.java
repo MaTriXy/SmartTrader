@@ -1,7 +1,10 @@
 package com.stocktrak;
 
 import com.google.gson.internal.LinkedHashTreeMap;
-import com.stocktrak.ticker.DJIA;
+import com.stocktrak.ticker.TickerInfo;
+import com.stocktrak.ticker.TickerInfoBuffer;
+import com.stocktrak.ticker.TickerMap;
+import com.stocktrak.transactional.Transaction;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVRecord;
 import org.apache.http.HttpEntity;
@@ -36,19 +39,20 @@ public class FinvizHttp {
 //    private static final String SESSION_COOKIE = "ASP.NET_SessionId";
 //    private static final String
     private HashSet<String> tickersStarted;
-
-	private ArrayList<String> tickerSymbol = new ArrayList<String>(); //Symbol
-	private ArrayList<String> tickerName = new ArrayList<String>(); //Company Name
-	private ArrayList<String> tickerSector = new ArrayList<String>(); //Sector
-	private ArrayList<String> tickerIndustry = new ArrayList<String>(); //Industry
 	private static String aspxAuth;
     private DefaultHttpClient httpClient;
 	private InputStreamReader inStream = null;
+    private TickerMap tickerMap;
 
 	public FinvizHttp(){
         httpClient = new DefaultHttpClient();
         tickersStarted = new HashSet();
+        tickerMap = new TickerMap(10);
 	}
+
+    public TickerMap getTickerMap() {
+        return tickerMap;
+    }
 
     public void login() {
         HttpPost httpPost = new HttpPost(BASE_URL + LOGIN_ACTION);
@@ -100,26 +104,27 @@ public class FinvizHttp {
         HttpGet httpGet = new HttpGet(BASE_URL + DOWNLOAD_DJIA);
         httpGet.setHeader("Accept", "application/csv");
         try {
+            int j = 0;
             HttpResponse response = httpClient.execute(httpGet);
             HttpEntity responseEntity = response.getEntity();
             InputStream is = responseEntity.getContent();
             CSVParser parser = new CSVParser(new InputStreamReader(is), CSVFormat.EXCEL);
             List<CSVRecord> list = parser.getRecords();
-            System.out.println(list);
             for(int i = 1; i < list.size(); i++) {
-
                 CSVRecord record = list.get(i);
-                long unixTime = System.currentTimeMillis();
+                TickerInfo tickerInfo = TickerInfo.fromCsvRecord(record);
+                String symbol = record.get(1);
                 FileWriter writer = new FileWriter("src/main/resources/" +
-                        record.get(1) + ".csv", true);
-                if(!tickersStarted.contains(record.get(1))) {
-                    tickersStarted.add(record.get(1));
+                        symbol + ".csv", true);
+                tickerMap.add(symbol, tickerInfo);
+                if(!tickersStarted.contains(symbol)) {
+                    tickersStarted.add(symbol);
                     writer.append("Price,Change,Volume,Time\n");
                 }
-                writer.append(record.get(8)+",");
-                writer.append(record.get(9)+",");
-                writer.append(record.get(10)+",");
-                writer.append(""+unixTime);
+                writer.append(tickerInfo.getPrice() + ",");
+                writer.append(tickerInfo.getChange() + ",");
+                writer.append(tickerInfo.getVolume() + ",");
+                writer.append(""+tickerInfo.getTime());
                 writer.append("\n");
                 writer.flush();
                 writer.close();

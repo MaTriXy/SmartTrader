@@ -1,5 +1,7 @@
 package com.stocktrak.ticker;
 
+import org.apache.commons.csv.CSVRecord;
+
 import java.sql.Time;
 
 /**
@@ -9,16 +11,12 @@ public class TickerInfo {
     private double price;
     private double change;
     private int volume;
-    private double dayHigh;
-    private double dayLow;
     private long time;
 
-    public TickerInfo(double price, double change, int volume, double dayHigh, double dayLow, long time) {
+    public TickerInfo(double price, double change, int volume, long time) {
         this.price = price;
         this.change = change;
         this.volume = volume;
-        this.dayHigh = dayHigh;
-        this.dayLow = dayLow;
         this.time = time;
     }
 
@@ -46,22 +44,6 @@ public class TickerInfo {
         this.volume = volume;
     }
 
-    public double getDayHigh() {
-        return dayHigh;
-    }
-
-    public void setDayHigh(double dayHigh) {
-        this.dayHigh = dayHigh;
-    }
-
-    public double getDayLow() {
-        return dayLow;
-    }
-
-    public void setDayLow(double dayLow) {
-        this.dayLow = dayLow;
-    }
-
     public long getTime() {
         return time;
     }
@@ -70,14 +52,20 @@ public class TickerInfo {
         this.time = time;
     }
 
+    public static TickerInfo fromCsvRecord(CSVRecord record) {
+        double price = Double.parseDouble(record.get(8));
+        double change = Double.parseDouble(record.get(9).replace("%", "")) / 100;
+        int volume = Integer.parseInt(record.get(10));
+        return new TickerInfo(price, change, volume, System.currentTimeMillis());
+    }
+
     @Override
     public String toString() {
-        return "Price: " + price +
-                ", Change: " + change +
-                ", Volume: " + volume +
-                ", Day's High: " + dayHigh +
-                ", Day's low: " + dayLow +
-                ", Time: " + time;
-
+        return "TickerInfo{" +
+                "price=" + price +
+                ", change=" + change +
+                ", volume=" + volume +
+                ", time=" + time +
+                '}';
     }
 }

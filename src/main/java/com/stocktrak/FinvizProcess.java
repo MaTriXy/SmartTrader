@@ -39,12 +39,16 @@ public class FinvizProcess extends Thread {
         while((currentTime = currentTime()) < endOfBusinessDay) {
             try {
                 finvizHttp.downloadDJIA();
+                determineTransactions(finvizHttp.getTickerMap());
                 sleep(PERIOD_SIZE);
             } catch(InterruptedException e) {
                 System.out.println(e);
             }
         }
         System.out.println(finvizHttp.getTickerMap());
+        System.out.println(AnalysisProcess.transactionQueue);
+        System.out.println(AnalysisProcess.accountCash);
+        System.out.println(AnalysisProcess.holdings);
     }
 
     public long currentTime() {
@@ -52,8 +56,8 @@ public class FinvizProcess extends Thread {
     }
 //    public long startOfBusinessDay() {
 //        Calendar cal = Calendar.getInstance();
-//        cal.set(Calendar.HOUR_OF_DAY, 19);
-//        cal.set(Calendar.MINUTE, 24);
+//        cal.set(Calendar.HOUR_OF_DAY, 9);
+//        cal.set(Calendar.MINUTE, 30);
 //        cal.set(Calendar.SECOND, 0);
 //        cal.set(Calendar.MILLISECOND, 0);
 //        return cal.getTimeInMillis();
@@ -61,9 +65,9 @@ public class FinvizProcess extends Thread {
 //
 //    public long endOfBusinessDay() {
 //        Calendar cal = Calendar.getInstance();
-//        cal.set(Calendar.HOUR_OF_DAY, 19);
-//        cal.set(Calendar.MINUTE, 24);
-//        cal.set(Calendar.SECOND, 30);
+//        cal.set(Calendar.HOUR_OF_DAY, 16);
+//        cal.set(Calendar.MINUTE, 0);
+//        cal.set(Calendar.SECOND, 0);
 //        cal.set(Calendar.MILLISECOND, 0);
 //        return cal.getTimeInMillis();
 //    }
@@ -76,33 +80,33 @@ public class FinvizProcess extends Thread {
         return currentTime() + 20000;
     }
 
-    public ArrayList<Transaction> determineTransactions(TickerMap tickerMap) {
-        ArrayList<Transaction> transactionList = new ArrayList();
+    public void determineTransactions(TickerMap tickerMap) {
         for(String symbol : tickerMap.getTickers()) {
             TickerInfoBuffer tickerInfoBuffer = tickerMap.get(symbol);
-            double previousMovingAverage = tickerInfoBuffer.getPreviousAnalytics().getAverage();
-            double currentMovingAverage = tickerInfoBuffer.getCurrentAnalytics().getAverage();
-            double previousPrice = tickerInfoBuffer.getPreviousTickerInfo().getPrice();
-            double currentPrice = tickerInfoBuffer.getCurrentTickerInfo().getPrice();
-            if(!AnalysisProcess.holdings.containsKey(symbol) &&
-                    previousPrice > previousMovingAverage && currentPrice < currentMovingAverage) {
-                int quantity = (int) (DEFAULT_TRADE_PRICE / currentPrice);
-                double totalSalePrice = quantity * currentPrice;
-                Transaction transaction = new Transaction(quantity, symbol, Transaction.Type.BUY);
-                HoldingInfo holdingInfo = new HoldingInfo(totalSalePrice, quantity, currentPrice);
-                transactionList.add(transaction);
-                AnalysisProcess.holdings.put(symbol, holdingInfo);
-                AnalysisProcess.accountCash.decreaseExpectedBy(totalSalePrice);
-            } else if(AnalysisProcess.holdings.containsKey(symbol)) {
-                HoldingInfo holdingInfo = AnalysisProcess.holdings.get(symbol);
-                boolean crossedToSell = previousPrice < previousMovingAverage && currentPrice > currentMovingAverage;
-                boolean profitHighEnough = holdingInfo.getPriceSpent() < 0.999 * currentPrice;
-                if (crossedToSell || profitHighEnough) {
-                    Transaction transaction = new Transaction(holdingInfo.getQuantity(), symbol, Transaction.Type.SELL);
-                    transactionList.add(transaction);
+            if(tickerInfoBuffer.atMaxSize()) {
+                double previousMovingAverage = tickerInfoBuffer.getPreviousAnalytics().getAverage();
+                double currentMovingAverage = tickerInfoBuffer.getCurrentAnalytics().getAverage();
+                double previousPrice = tickerInfoBuffer.getPreviousTickerInfo().getPrice();
+                double currentPrice = tickerInfoBuffer.getCurrentTickerInfo().getPrice();
+                if (!AnalysisProcess.holdings.containsKey(symbol) &&
+                        previousPrice > previousMovingAverage && currentPrice < currentMovingAverage) {
+                    int quantity = (int) (DEFAULT_TRADE_PRICE / currentPrice);
+                    double totalSalePrice = quantity * currentPrice;
+                    Transaction transaction = new Transaction(quantity, symbol, Transaction.Type.BUY);
+                    HoldingInfo holdingInfo = new HoldingInfo(totalSalePrice, quantity, currentPrice);
+                    AnalysisProcess.transactionQueue.add(transaction);
+                    AnalysisProcess.holdings.put(symbol, holdingInfo);
+                    AnalysisProcess.accountCash.decreaseExpectedBy(totalSalePrice);
+                } else if (AnalysisProcess.holdings.containsKey(symbol)) {
+                    HoldingInfo holdingInfo = AnalysisProcess.holdings.get(symbol);
+                    boolean crossedToSell = previousPrice < previousMovingAverage && currentPrice > currentMovingAverage;
+                    boolean profitHighEnough = holdingInfo.getPriceSpent() < 0.999 * currentPrice;
+                    if (crossedToSell || profitHighEnough) {
+                        Transaction transaction = new Transaction(holdingInfo.getQuantity(), symbol, Transaction.Type.SELL);
+                        AnalysisProcess.transactionQueue.add(transaction);
+                    }
                 }
             }
         }
-        return null;
     }
 }

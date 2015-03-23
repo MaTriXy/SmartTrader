@@ -37,4 +37,11 @@ public class AccountCash {
         currentCash.increaseBy(increase);
     }
 
+    @Override
+    public String toString() {
+        return "AccountCash{" +
+                "currentCash=" + currentCash +
+                ", expectedCash=" + expectedCash +
+                '}';
+    }
 }

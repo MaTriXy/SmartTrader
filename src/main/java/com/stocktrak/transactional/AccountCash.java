@@ -41,6 +41,10 @@ public class AccountCash {
         currentCash = new Cash(amount);
     }
 
+    public synchronized void setExpectedCash(double amount) {
+        expectedCash = new Cash(amount);
+    }
+
     @Override
     public String toString() {
         return "AccountCash{" +

@@ -40,5 +40,14 @@ public class Transaction {
     public void setType(Type type) {
         this.type = type;
     }
+
+    @Override
+    public String toString() {
+        return "Transaction{" +
+                "quantity=" + quantity +
+                ", symbol='" + symbol + '\'' +
+                ", type=" + type +
+                '}';
+    }
 }
 

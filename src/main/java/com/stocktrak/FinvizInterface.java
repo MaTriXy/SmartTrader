@@ -119,10 +119,6 @@ public class FinvizInterface {
                 FileWriter writer = new FileWriter("src/main/resources/" +
                         symbol + ".csv", true);
                 tickerMap.add(symbol, tickerInfo);
-                if(!tickersStarted.contains(symbol)) {
-                    tickersStarted.add(symbol);
-                    writer.append("Price,Change,Volume,Time\n");
-                }
                 writer.append(tickerInfo.getPrice() + ",");
                 writer.append(tickerInfo.getChange() + ",");
                 writer.append(tickerInfo.getVolume() + ",");
@@ -145,7 +141,7 @@ public class FinvizInterface {
                 FileReader fileReader = new FileReader("src/main/resources/" + ticker + ".csv");
                 List<CSVRecord> records = new CSVParser(new BufferedReader(fileReader), CSVFormat.EXCEL)
                         .getRecords();
-                records.subList(1, records.size()).stream().forEach(record -> tickerMap.add(ticker, TickerInfo.fromCustomCsvRecord(record)));
+                records.stream().forEach(record -> tickerMap.add(ticker, TickerInfo.fromCustomCsvRecord(record)));
                 fileReader.close();
             } catch(IOException e) {
                 System.out.println(e);

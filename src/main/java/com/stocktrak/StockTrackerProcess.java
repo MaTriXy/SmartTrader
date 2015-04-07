@@ -82,6 +82,7 @@ public class StockTrackerProcess extends Thread {
                         .getText().replace("$","").replace(",",""));
         log("portfolioValue="+portfolioValue);
         AnalysisProcess.accountCash.setCurrentCash(portfolioValue);
+        AnalysisProcess.accountCash.setExpectedCash(portfolioValue);
 
     }
 
@@ -114,12 +115,12 @@ public class StockTrackerProcess extends Thread {
                     "/div[@class='content bg-pageContent']/div[@class='index']/div[@class='left-col']" +
                     "/div[@class='introduction-box']/div[2]/div[@id='ContentPlaceHolder1_Equities_TradePanel']" +
                     "/div[@id='ContentPlaceHolder1_Equities_UpdatePanel1']/table[@class='data']/tbody/tr[2]/td[7]"))
-                .getText());
+                .getText().replace(",", ""));
         WebElement placeOrderButton = driver.findElement(By.id("ContentPlaceHolder1_Equities_btnPlaceOrder"));
         placeOrderButton.click();
 
         if(transaction.equals(Transaction.Type.BUY)) {
-            accountCash.decreaseCurrentBy(transactionDollarAmount);
+            accountCash.increaseCurrentBy(transactionDollarAmount);
         } else if(transaction.equals(Transaction.Type.SELL)) {
             accountCash.increaseCurrentBy(transactionDollarAmount);
         }

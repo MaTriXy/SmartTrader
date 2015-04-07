@@ -13,6 +13,7 @@ import java.util.Calendar;
  */
 public class FinvizProcess extends Thread {
     private static final long PERIOD_SIZE = 60000;
+    private static final int MOVING_AVG_LENGTH = 10;
     private static final double DEFAULT_TRADE_PRICE = 160000;
 
     @Override
@@ -25,7 +26,7 @@ public class FinvizProcess extends Thread {
         super.run();
         long startOfBusinessDay = startOfBusinessDay();
         long endOfBusinessDay = endOfBusinessDay();
-        FinvizHttp finvizHttp = new FinvizHttp();
+        FinvizHttp finvizHttp = new FinvizHttp(MOVING_AVG_LENGTH);
         finvizHttp.login();
         long currentTime;
         while((currentTime = currentTime()) < startOfBusinessDay){
@@ -46,6 +47,7 @@ public class FinvizProcess extends Thread {
                 System.out.println(e);
             }
         }
+        closeAllTrades();
     }
 
     public long currentTime() {
@@ -87,7 +89,7 @@ public class FinvizProcess extends Thread {
                 double previousPrice = tickerInfoBuffer.getPreviousTickerInfo().getPrice();
                 double currentPrice = tickerInfoBuffer.getCurrentTickerInfo().getPrice();
                 if (!AnalysisProcess.holdings.containsKey(symbol) &&
-                        previousPrice > previousMovingAverage && currentPrice < currentMovingAverage) {
+                        previousPrice < previousMovingAverage && currentPrice > currentMovingAverage) {
                     int quantity = (int) (DEFAULT_TRADE_PRICE / currentPrice);
                     double totalSalePrice = quantity * currentPrice;
                     Transaction transaction = new Transaction(quantity, symbol, Transaction.Type.BUY);
@@ -97,13 +99,25 @@ public class FinvizProcess extends Thread {
                     AnalysisProcess.accountCash.decreaseExpectedBy(totalSalePrice);
                 } else if (AnalysisProcess.holdings.containsKey(symbol)) {
                     HoldingInfo holdingInfo = AnalysisProcess.holdings.get(symbol);
-                    boolean crossedToSell = previousPrice < previousMovingAverage && currentPrice > currentMovingAverage;
+                    boolean crossedToSell = previousPrice > previousMovingAverage && currentPrice < currentMovingAverage;
                     boolean profitHighEnough = holdingInfo.getPriceSpent() < 0.999 * currentPrice;
                     if (crossedToSell || profitHighEnough) {
                         Transaction transaction = new Transaction(holdingInfo.getQuantity(), symbol, Transaction.Type.SELL);
                         AnalysisProcess.transactionQueue.add(transaction);
+                        AnalysisProcess.holdings.remove(symbol);
                     }
                 }
+            }
+        }
+    }
+
+    public void closeAllTrades() {
+        if(AnalysisProcess.holdings != null) {
+            for(String ticker : AnalysisProcess.holdings.keySet()) {
+                HoldingInfo holdingInfo = AnalysisProcess.holdings.get(ticker);
+                Transaction transaction = new Transaction(holdingInfo.getQuantity(), ticker, Transaction.Type.SELL);
+                AnalysisProcess.transactionQueue.add(transaction);
+                AnalysisProcess.holdings.remove(ticker);
             }
         }
     }

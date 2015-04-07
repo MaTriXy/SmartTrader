@@ -44,10 +44,10 @@ public class FinvizHttp {
 	private InputStreamReader inStream = null;
     private TickerMap tickerMap;
 
-	public FinvizHttp(){
+	public FinvizHttp(int bufferSize){
         httpClient = new DefaultHttpClient();
         tickersStarted = new HashSet();
-        tickerMap = new TickerMap(10);
+        tickerMap = new TickerMap(bufferSize);
 	}
 
     public TickerMap getTickerMap() {

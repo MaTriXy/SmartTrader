@@ -155,7 +155,7 @@ public class FinvizInterface {
             try {
                 BufferedReader reader = new BufferedReader(new FileReader("src/main/resources/portfolio5.csv"));
                 int i = 0;
-                while (i < 5) {
+                while (i < 6) {
                     portfolio.add(reader.readLine());
                     i++;
                 }

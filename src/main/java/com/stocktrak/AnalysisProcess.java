@@ -14,15 +14,14 @@ public class AnalysisProcess {
 
     public static final LinkedBlockingQueue<Transaction> transactionQueue = new LinkedBlockingQueue();
     public static final AccountCash accountCash = new AccountCash();
-    public static final Integer BUFFER_SIZE = 10;
     public static final HoldingsMap holdings = new HoldingsMap();
 
     public AnalysisProcess() {
     }
 
     public static void main(String[] args) {
-//        Thread stockTrackerProcess = new StockTrackerProcess();
-//        stockTrackerProcess.start();
+        Thread stockTrackerProcess = new StockTrackerProcess();
+        stockTrackerProcess.start();
         Thread finvizProcess = new FinvizProcess();
         finvizProcess.start();
     }

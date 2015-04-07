@@ -11,7 +11,6 @@ import java.util.function.Consumer;
  * Created by Douglas on 2/16/2015.
  */
 public class TickerInfoBuffer implements Iterable<TickerInfo> {
-    private Analytics analytics;
     private CircularFifoBuffer tickerInfoBuffer;
     private TickerInfo currentTickerInfo;
     private TickerInfo previousTickerInfo;
@@ -100,8 +99,7 @@ public class TickerInfoBuffer implements Iterable<TickerInfo> {
     @Override
     public String toString() {
         return "TickerInfoBuffer{" +
-                "analytics=" + analytics +
-                ", tickerInfoBuffer=" + tickerInfoBuffer +
+                "tickerInfoBuffer=" + tickerInfoBuffer +
                 ", currentTickerInfo=" + currentTickerInfo +
                 ", previousTickerInfo=" + previousTickerInfo +
                 ", currentAnalytics=" + currentAnalytics +

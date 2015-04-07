@@ -1,41 +1,32 @@
 package com.stocktrak;
 
-import com.google.gson.internal.LinkedHashTreeMap;
 import com.stocktrak.ticker.TickerInfo;
-import com.stocktrak.ticker.TickerInfoBuffer;
 import com.stocktrak.ticker.TickerMap;
-import com.stocktrak.transactional.Transaction;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVRecord;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.ClientProtocolException;
-import org.apache.http.client.HttpClient;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.cookie.Cookie;
-import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.DefaultHttpClient;
-import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.message.BasicNameValuePair;
 import org.apache.http.util.EntityUtils;
 import org.apache.commons.csv.CSVParser;
 
 import java.io.*;
-import java.lang.reflect.Array;
-import java.net.URL;
-import java.net.URLConnection;
-import java.text.SimpleDateFormat;
 import java.util.*;
 
-public class FinvizHttp {
+public class FinvizInterface {
 	private static final String EMAIL = "qpcamp@gmail.com";
     private static final String PASSWORD = "Dresser5";
     private static final String BASE_URL = "http://finviz.com/";
     private static final String LOGIN_ACTION = "login_submit.ashx";
     private static final String DOWNLOAD_DJIA = "export.ashx?v=111&f=idx_dji";
+    private ArrayList<String> portfolio5 = null;
 //    private static final String SESSION_COOKIE = "ASP.NET_SessionId";
 //    private static final String
     private HashSet<String> tickersStarted;
@@ -44,7 +35,7 @@ public class FinvizHttp {
 	private InputStreamReader inStream = null;
     private TickerMap tickerMap;
 
-	public FinvizHttp(int bufferSize){
+	public FinvizInterface(int bufferSize){
         httpClient = new DefaultHttpClient();
         tickersStarted = new HashSet();
         tickerMap = new TickerMap(bufferSize);
@@ -99,9 +90,20 @@ public class FinvizHttp {
         return sb.toString();
     }
 
+    public <T> String listToString(ArrayList<T> list) {
+        return list.stream().map(T::toString).reduce((a, b) -> a + "," + b).get(); //lol
+    }
+
+    public void downloadPortfolioFive() {
+        download("export.ashx?t=" + listToString(getPortfolioFive()));
+    }
 
 	public void downloadDJIA(){
-        HttpGet httpGet = new HttpGet(BASE_URL + DOWNLOAD_DJIA);
+        download(DOWNLOAD_DJIA);
+	}
+
+    public void download(String urlExtension){
+        HttpGet httpGet = new HttpGet(BASE_URL + urlExtension);
         httpGet.setHeader("Accept", "application/csv");
         try {
             int j = 0;
@@ -112,15 +114,11 @@ public class FinvizHttp {
             List<CSVRecord> list = parser.getRecords();
             for(int i = 1; i < list.size(); i++) {
                 CSVRecord record = list.get(i);
-                TickerInfo tickerInfo = TickerInfo.fromCsvRecord(record);
+                TickerInfo tickerInfo = TickerInfo.fromFinvizCsvRecord(record);
                 String symbol = record.get(1);
                 FileWriter writer = new FileWriter("src/main/resources/" +
                         symbol + ".csv", true);
                 tickerMap.add(symbol, tickerInfo);
-                if(!tickersStarted.contains(symbol)) {
-                    tickersStarted.add(symbol);
-                    writer.append("Price,Change,Volume,Time\n");
-                }
                 writer.append(tickerInfo.getPrice() + ",");
                 writer.append(tickerInfo.getChange() + ",");
                 writer.append(tickerInfo.getVolume() + ",");
@@ -135,5 +133,39 @@ public class FinvizHttp {
         } catch(IOException e) {
             System.out.println(e);
         }
-	}
+    }
+
+    public void initializeTickerMap(ArrayList<String> tickers) {
+        tickers.forEach(ticker -> {
+            try {
+                FileReader fileReader = new FileReader("src/main/resources/" + ticker + ".csv");
+                List<CSVRecord> records = new CSVParser(new BufferedReader(fileReader), CSVFormat.EXCEL)
+                        .getRecords();
+                records.stream().forEach(record -> tickerMap.add(ticker, TickerInfo.fromCustomCsvRecord(record)));
+                fileReader.close();
+            } catch(IOException e) {
+                System.out.println(e);
+            }
+        });
+    }
+
+    public ArrayList<String> getPortfolioFive() {
+        if(portfolio5 == null) {
+            ArrayList<String> portfolio = new ArrayList();
+            try {
+                BufferedReader reader = new BufferedReader(new FileReader("src/main/resources/portfolio5.csv"));
+                int i = 0;
+                while (i < 5) {
+                    portfolio.add(reader.readLine());
+                    i++;
+                }
+                reader.close();
+            } catch (IOException e) {
+                System.out.println(e);
+            }
+            return portfolio;
+        } else {
+            return portfolio5;
+        }
+    }
 }

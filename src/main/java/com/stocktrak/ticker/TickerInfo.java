@@ -52,11 +52,19 @@ public class TickerInfo {
         this.time = time;
     }
 
-    public static TickerInfo fromCsvRecord(CSVRecord record) {
+    public static TickerInfo fromFinvizCsvRecord(CSVRecord record) {
         double price = Double.parseDouble(record.get(8));
         double change = Double.parseDouble(record.get(9).replace("%", "")) / 100;
         int volume = Integer.parseInt(record.get(10));
         return new TickerInfo(price, change, volume, System.currentTimeMillis());
+    }
+
+    public static TickerInfo fromCustomCsvRecord(CSVRecord record) {
+        double price = Double.parseDouble(record.get(0));
+        double change = Double.parseDouble(record.get(1).replace("%", "")) / 100;
+        int volume = Integer.parseInt(record.get(2));
+        long time = Long.parseLong(record.get(3));
+        return new TickerInfo(price, change, volume, time);
     }
 
     @Override

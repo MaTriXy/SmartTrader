@@ -34,7 +34,7 @@ public class StockTrackerProcess extends Thread {
         Calendar eob = Calendar.getInstance();
         eob.set(2015, Calendar.FEBRUARY, 14, 18, 52);
         WebDriver driver = new FirefoxDriver();
-        login(driver, USERNAME, PASSWORD);
+        login(driver);
         updatePortfolioValue(driver);
         log(cal.getTime());
         boolean stop = false;
@@ -59,7 +59,7 @@ public class StockTrackerProcess extends Thread {
         driver.quit();
     }
 
-    private void login(WebDriver driver, String username, String password) {
+    private void login(WebDriver driver) {
         driver.navigate().to("http://stocktrak.com");
         System.out.println(driver.getTitle());
         WebElement usernameField = driver.findElement(By.id("Login1_UserName"));
@@ -68,6 +68,18 @@ public class StockTrackerProcess extends Thread {
         usernameField.sendKeys(USERNAME);
         passwordField.sendKeys(PASSWORD);
         submitLogin.click();
+    }
+
+    private void logout(WebDriver driver) {
+        WebElement logoutButton = driver.findElement(By.id("Header1_btnLogout"));
+        logoutButton.click();
+        WebDriverWait wait = new WebDriverWait(driver, 4000);
+        wait.until(ExpectedConditions.visibilityOfElementLocated((By.id("Login1_Login"))));
+    }
+
+    private void refreshCookie(WebDriver driver) {
+        logout(driver);
+        login(driver);
     }
 
     private void updatePortfolioValue(WebDriver driver) throws ElementNotFoundException {

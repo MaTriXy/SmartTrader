@@ -31,14 +31,22 @@ public class TickerInfoBuffer implements Iterable<TickerInfo> {
         return maxSize;
     }
 
-    public void updateAnalytics() {
+    private double getAverage() {
         double sum = 0;
         for(TickerInfo tickerInfo : this) {
             sum += tickerInfo.getPrice();
         }
         double average = sum / tickerInfoBuffer.size();
+        return average;
+    }
+
+    private double getStandardDeviation() {
+        return 0.0;
+    }
+
+    public void updateAnalytics() {
         previousAnalytics = currentAnalytics;
-        currentAnalytics = new Analytics(average, 0);
+        currentAnalytics = new Analytics(getAverage(), getStandardDeviation());
     }
 
     public Analytics getCurrentAnalytics() {

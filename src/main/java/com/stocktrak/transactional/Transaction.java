@@ -8,7 +8,7 @@ public class Transaction {
     private String symbol;
     private Type type;
     public enum Type {
-        BUY, SELL
+        BUY, SELL, SHORT, REFRESH
     }
     public Transaction(int quantity, String symbol, Type type) {
         this.quantity = quantity;

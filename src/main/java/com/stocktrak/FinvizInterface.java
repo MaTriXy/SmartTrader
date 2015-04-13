@@ -155,7 +155,7 @@ public class FinvizInterface {
         if(portfolio6 == null) {
             ArrayList<String> portfolio = new ArrayList();
             try {
-                BufferedReader reader = new BufferedReader(new FileReader("src/main/resources/portfolio5.csv"));
+                BufferedReader reader = new BufferedReader(new FileReader("src/main/resources/portfolio6.csv"));
                 int i = 0;
                 while (i < 6) {
                     portfolio.add(reader.readLine());

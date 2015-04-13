@@ -3,6 +3,7 @@ package com.stocktrak.ticker;
 import org.apache.commons.csv.CSVRecord;
 
 import java.sql.Time;
+import java.util.Calendar;
 
 /**
  * Created by Douglas on 2/15/2015.
@@ -56,12 +57,12 @@ public class TickerInfo {
         double price = Double.parseDouble(record.get(8));
         double change = Double.parseDouble(record.get(9).replace("%", "")) / 100;
         int volume = Integer.parseInt(record.get(10));
-        return new TickerInfo(price, change, volume, System.currentTimeMillis());
+        return new TickerInfo(price, change, volume, Calendar.getInstance().getTimeInMillis());
     }
 
     public static TickerInfo fromCustomCsvRecord(CSVRecord record) {
         double price = Double.parseDouble(record.get(0));
-        double change = Double.parseDouble(record.get(1).replace("%", "")) / 100;
+        double change = Double.parseDouble(record.get(1));
         int volume = Integer.parseInt(record.get(2));
         long time = Long.parseLong(record.get(3));
         return new TickerInfo(price, change, volume, time);

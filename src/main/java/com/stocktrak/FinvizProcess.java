@@ -12,9 +12,9 @@ import java.util.Calendar;
  */
 public class FinvizProcess extends Thread {
     private static final String LOG_TAG = "FinvizProcess";
-    private static final long PERIOD_SIZE = 60000;
+    private static final long PERIOD_SIZE = 900000;
     private static final int MOVING_AVG_LENGTH = 10;
-    private static final double DEFAULT_TRADE_PRICE = 160000;
+    private static final double DEFAULT_TRADE_PRICE = 800000;
 
     private ReadyToUpdatePortfolioListener readyToUpdatePortfolioListener;
 
@@ -35,6 +35,7 @@ public class FinvizProcess extends Thread {
         FinvizInterface finvizInterface = new FinvizInterface(MOVING_AVG_LENGTH);
         finvizInterface.login();
         long currentTime;
+        //finvizInterface.initializeTickerMapWithPortfolioSix();
         while((currentTime = currentTime()) < startOfBusinessDay) {
             try {
                 sleep(1000);
@@ -43,7 +44,6 @@ public class FinvizProcess extends Thread {
             }
         }
         System.out.println("Business day has begun.");
-        finvizInterface.initializeTickerMapWithPortfolioSix();
         while((currentTime = currentTime()) < endOfBusinessDay) {
             finvizInterface.downloadPortfolioSixData();
             TickerMap tickerMap = finvizInterface.getTickerMap();
@@ -66,31 +66,31 @@ public class FinvizProcess extends Thread {
         return Calendar.getInstance().getTimeInMillis();
     }
 
-//    public long startOfBusinessDay() {
-//        Calendar cal = Calendar.getInstance();
-//        cal.set(Calendar.HOUR_OF_DAY, 9);
-//        cal.set(Calendar.MINUTE, 30);
-//        cal.set(Calendar.SECOND, 0);
-//        cal.set(Calendar.MILLISECOND, 0);
-//        return cal.getTimeInMillis();
-//    }
-//
-//    public long endOfBusinessDay() {
-//        Calendar cal = Calendar.getInstance();
-//        cal.set(Calendar.HOUR_OF_DAY, 16);
-//        cal.set(Calendar.MINUTE, 0);
-//        cal.set(Calendar.SECOND, 0);
-//        cal.set(Calendar.MILLISECOND, 0);
-//        return cal.getTimeInMillis();
-//    }
-
     public long startOfBusinessDay() {
-        return currentTime();
+        Calendar cal = Calendar.getInstance();
+        cal.set(Calendar.HOUR_OF_DAY, 11);
+        cal.set(Calendar.MINUTE, 30);
+        cal.set(Calendar.SECOND, 0);
+        cal.set(Calendar.MILLISECOND, 0);
+        return cal.getTimeInMillis();
     }
 
     public long endOfBusinessDay() {
-        return currentTime() + 200000;
+        Calendar cal = Calendar.getInstance();
+        cal.set(Calendar.HOUR_OF_DAY, 16);
+        cal.set(Calendar.MINUTE, 0);
+        cal.set(Calendar.SECOND, 0);
+        cal.set(Calendar.MILLISECOND, 0);
+        return cal.getTimeInMillis();
     }
+
+//    public long startOfBusinessDay() {
+//        return currentTime();
+//    }
+//
+//    public long endOfBusinessDay() {
+//        return currentTime() + 200000;
+//    }
 
     public void determineTransactions(TickerMap tickerMap) {
         for(String symbol : tickerMap.getTickers()) {

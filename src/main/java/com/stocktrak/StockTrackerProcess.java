@@ -42,7 +42,6 @@ public class StockTrackerProcess extends Thread {
             readyToTradeListener.readyToTrade();
         }
         boolean stop = false;
-        boolean madeTransaction = false;
         while(!stop) {
             while (!transactionQueue.isEmpty()) {
                 try {
@@ -141,7 +140,9 @@ public class StockTrackerProcess extends Thread {
             try {
                 String currentXPath = xPathToBody + "/tr[" + i + "]";
                 int qty = Integer.parseInt(driver.findElement(By.xpath(currentXPath + "/td[5]")).getText());
-                double pricePaid = Double.parseDouble(driver.findElement(By.xpath(currentXPath + "/td[8]")).getText());
+                String priceString = driver.findElement(By.xpath(currentXPath + "/td[8]")).getText();
+
+                double pricePaid = Double.parseDouble(priceString);
                 double totalSale = qty * pricePaid;
                 String symbol = driver.findElement(By.xpath(currentXPath + "/td[2]")).getText();
                 AnalysisProcess.holdings.put(symbol, new HoldingInfo(totalSale, qty, pricePaid));

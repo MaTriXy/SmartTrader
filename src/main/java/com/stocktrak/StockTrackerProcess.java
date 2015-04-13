@@ -2,6 +2,7 @@ package com.stocktrak;
 
 import com.gargoylesoftware.htmlunit.ElementNotFoundException;
 import com.stocktrak.transactional.AccountCash;
+import com.stocktrak.transactional.HoldingInfo;
 import com.stocktrak.transactional.Transaction;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
@@ -9,7 +10,7 @@ import org.openqa.selenium.WebElement;
 import org.openqa.selenium.firefox.FirefoxDriver;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
-import java.util.Calendar;
+
 import java.util.Queue;
 
 
@@ -19,8 +20,13 @@ import java.util.Queue;
 public class StockTrackerProcess extends Thread {
     private Queue<Transaction> transactionQueue = AnalysisProcess.transactionQueue;
     private AccountCash accountCash = AnalysisProcess.accountCash;
+    private ReadyToTradeListener readyToTradeListener;
+    private ReadyToUpdatePortfolioListener readyToUpdatePortfolioListener;
+    private WebDriver driver;
 
-    public StockTrackerProcess() {
+    public StockTrackerProcess(ReadyToTradeListener readyToTradeListener, ReadyToUpdatePortfolioListener readyToUpdatePortfolioListener) {
+        this.readyToTradeListener = readyToTradeListener;
+        this.readyToUpdatePortfolioListener = readyToUpdatePortfolioListener;
     }
 
     private static final String LOG_TAG = "StockTrackerProcess";
@@ -30,22 +36,20 @@ public class StockTrackerProcess extends Thread {
     @Override
     public void run() {
         super.run();
-        Calendar cal = Calendar.getInstance();
-        Calendar eob = Calendar.getInstance();
-        eob.set(2015, Calendar.FEBRUARY, 14, 18, 52);
-        WebDriver driver = new FirefoxDriver();
-        login(driver);
-        updatePortfolioValue(driver);
-        log(cal.getTime());
+        driver = new FirefoxDriver();
+        login();
+        if(updatePortfolioValue() && updateHoldings()) {
+            readyToTradeListener.readyToTrade();
+        }
         boolean stop = false;
+        boolean madeTransaction = false;
         while(!stop) {
             while (!transactionQueue.isEmpty()) {
-                log(cal.getTime());
-                log(eob.getTime());
                 try {
-                    makeTransaction(driver, transactionQueue.remove());
+                    Transaction transaction = transactionQueue.remove();
+                    makeTransaction(transaction);
                 } catch (ElementNotFoundException e) {
-                    log(e.getClass() + ": " + e.getMessage());
+                    log(e);
                 }
             }
             try {
@@ -59,46 +63,103 @@ public class StockTrackerProcess extends Thread {
         driver.quit();
     }
 
-    private void login(WebDriver driver) {
-        driver.navigate().to("http://stocktrak.com");
-        System.out.println(driver.getTitle());
-        WebElement usernameField = driver.findElement(By.id("Login1_UserName"));
-        WebElement passwordField = driver.findElement(By.id("Login1_Password"));
-        WebElement submitLogin = driver.findElement(By.id("Login1_Login"));
-        usernameField.sendKeys(USERNAME);
-        passwordField.sendKeys(PASSWORD);
-        submitLogin.click();
+    private boolean login() {
+        try {
+            driver.navigate().to("http://stocktrak.com");
+            WebDriverWait wait = new WebDriverWait(driver, 4000);
+            wait.until(ExpectedConditions.visibilityOfElementLocated((By.id("Login1_Login"))));
+            WebElement usernameField = driver.findElement(By.id("Login1_UserName"));
+            WebElement passwordField = driver.findElement(By.id("Login1_Password"));
+            WebElement submitLogin = driver.findElement(By.id("Login1_Login"));
+            usernameField.sendKeys(USERNAME);
+            passwordField.sendKeys(PASSWORD);
+            submitLogin.click();
+        } catch(Exception e) {
+            return false;
+        }
+        return true;
     }
 
-    private void logout(WebDriver driver) {
-        WebElement logoutButton = driver.findElement(By.id("Header1_btnLogout"));
-        logoutButton.click();
-        WebDriverWait wait = new WebDriverWait(driver, 4000);
-        wait.until(ExpectedConditions.visibilityOfElementLocated((By.id("Login1_Login"))));
+    private boolean logout() {
+        try {
+            WebDriverWait wait = new WebDriverWait(driver, 4000);
+            wait.until(ExpectedConditions.visibilityOfElementLocated((By.id("Header1_btnLogout"))));
+            WebElement logoutButton = driver.findElement(By.id("Header1_btnLogout"));
+            logoutButton.click();
+        } catch(Exception e) {
+            return false;
+        }
+        return true;
     }
 
-    private void refreshCookie(WebDriver driver) {
-        logout(driver);
-        login(driver);
+    private void refreshCookie() {
+        logout();
+        login();
     }
 
-    private void updatePortfolioValue(WebDriver driver) throws ElementNotFoundException {
-        driver.navigate().to("http://stocktrak.com/private/account/portfolio.aspx");
-
-        Double portfolioValue = Double.parseDouble(
-                driver.findElement(By.xpath("/html/body/form[@id='form1']" +
-                        "/div[@id='wrapper']/div[@class='inner-wrapper']" +
-                        "/div[@class='content bg-pageContent']/div[@class='index']/div[@class='left-col']" +
-                        "/div[@class='introduction-box']/div[@class='content-left']/div[@class='snapshot']" +
-                        "/table[@class='data']/tbody/tr[2]/td[2]"))
-                        .getText().replace("$","").replace(",",""));
+    public boolean updatePortfolioValue() throws ElementNotFoundException {
+        String url = "http://stocktrak.com/private/account/portfolio.aspx";
+        if(!driver.getCurrentUrl().equals(url)) {
+            driver.navigate().to(url);
+        }
+        Double portfolioValue = null;
+        String portfolioValueXPath = "/html/body/form[@id='form1']" +
+                "/div[@id='wrapper']/div[@class='inner-wrapper']" +
+                "/div[@class='content bg-pageContent']/div[@class='index']/div[@class='left-col']" +
+                "/div[@class='introduction-box']/div[@class='content-left']/div[@class='snapshot']" +
+                "/table[@class='data']/tbody/tr[2]/td[2]";
+        try {
+            WebDriverWait wait = new WebDriverWait(driver, 4000);
+            wait.until(ExpectedConditions.visibilityOfElementLocated(By.xpath(portfolioValueXPath)));
+            portfolioValue = Double.parseDouble(driver.findElement(By.xpath(portfolioValueXPath))
+                    .getText().replace("$", "").replace(",", ""));
+        } catch(Exception e) {
+            log(e);
+        }
         log("portfolioValue="+portfolioValue);
         AnalysisProcess.accountCash.setCurrentCash(portfolioValue);
         AnalysisProcess.accountCash.setExpectedCash(portfolioValue);
-
+        return portfolioValue != null;
     }
 
-    private void makeTransaction(WebDriver driver, Transaction transaction) throws ElementNotFoundException {
+    public boolean updateHoldings() throws ElementNotFoundException {
+        boolean success = true;
+        String url = "http://stocktrak.com/private/account/openpositions.aspx";
+        if(!driver.getCurrentUrl().equals(url)) {
+            driver.navigate().to(url);
+        }
+        WebDriverWait wait = new WebDriverWait(driver, 4000);
+        try {
+            wait.until(ExpectedConditions.visibilityOfElementLocated(By.id("tOpenPositions")));
+        } catch(Exception e) {
+            return false;
+        }
+        String xPathToBody = "//table[@id='tOpenPositions']/tbody";
+        boolean hasMore = true;
+        int i = 2;
+        while(hasMore) {
+            try {
+                String currentXPath = xPathToBody + "/tr[" + i + "]";
+                int qty = Integer.parseInt(driver.findElement(By.xpath(currentXPath + "/td[5]")).getText());
+                double pricePaid = Double.parseDouble(driver.findElement(By.xpath(currentXPath + "/td[8]")).getText());
+                double totalSale = qty * pricePaid;
+                String symbol = driver.findElement(By.xpath(currentXPath + "/td[2]")).getText();
+                AnalysisProcess.holdings.put(symbol, new HoldingInfo(totalSale, qty, pricePaid));
+                log(AnalysisProcess.holdings);
+            } catch(Exception e) {
+                hasMore = false;
+                log("no more");
+            }
+            i++;
+        }
+        return success;
+    }
+
+    private void makeTransaction(Transaction transaction) throws ElementNotFoundException {
+        if(transaction.getType().equals(Transaction.Type.REFRESH)) {
+            refreshCookie();
+            return;
+        }
         driver.navigate().to("http://stocktrak.com/private/trading/equities.aspx");
 
         WebDriverWait wait = new WebDriverWait(driver, 4000);
@@ -131,9 +192,9 @@ public class StockTrackerProcess extends Thread {
         WebElement placeOrderButton = driver.findElement(By.id("ContentPlaceHolder1_Equities_btnPlaceOrder"));
         placeOrderButton.click();
 
-        if(transaction.equals(Transaction.Type.BUY)) {
+        if(transaction.getType().equals(Transaction.Type.BUY)) {
             accountCash.increaseCurrentBy(transactionDollarAmount);
-        } else if(transaction.equals(Transaction.Type.SELL)) {
+        } else if(transaction.getType().equals(Transaction.Type.SELL)) {
             accountCash.increaseCurrentBy(transactionDollarAmount);
         }
     }

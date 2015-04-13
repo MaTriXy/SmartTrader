@@ -26,9 +26,7 @@ public class FinvizInterface {
     private static final String BASE_URL = "http://finviz.com/";
     private static final String LOGIN_ACTION = "login_submit.ashx";
     private static final String DOWNLOAD_DJIA = "export.ashx?v=111&f=idx_dji";
-    private ArrayList<String> portfolio5 = null;
-//    private static final String SESSION_COOKIE = "ASP.NET_SessionId";
-//    private static final String
+    private ArrayList<String> portfolio6 = null;
     private HashSet<String> tickersStarted;
 	private static String aspxAuth;
     private DefaultHttpClient httpClient;
@@ -94,8 +92,8 @@ public class FinvizInterface {
         return list.stream().map(T::toString).reduce((a, b) -> a + "," + b).get(); //lol
     }
 
-    public void downloadPortfolioFive() {
-        download("export.ashx?t=" + listToString(getPortfolioFive()));
+    public void downloadPortfolioSixData() {
+        download("export.ashx?t=" + listToString(getPortfolioSix()));
     }
 
 	public void downloadDJIA(){
@@ -135,7 +133,11 @@ public class FinvizInterface {
         }
     }
 
-    public void initializeTickerMap(ArrayList<String> tickers) {
+    public void initializeTickerMapWithPortfolioSix() {
+        initializeTickerMap(getPortfolioSix());
+    }
+
+    private void initializeTickerMap(ArrayList<String> tickers) {
         tickers.forEach(ticker -> {
             try {
                 FileReader fileReader = new FileReader("src/main/resources/" + ticker + ".csv");
@@ -149,8 +151,8 @@ public class FinvizInterface {
         });
     }
 
-    public ArrayList<String> getPortfolioFive() {
-        if(portfolio5 == null) {
+    private ArrayList<String> getPortfolioSix() {
+        if(portfolio6 == null) {
             ArrayList<String> portfolio = new ArrayList();
             try {
                 BufferedReader reader = new BufferedReader(new FileReader("src/main/resources/portfolio5.csv"));
@@ -165,7 +167,7 @@ public class FinvizInterface {
             }
             return portfolio;
         } else {
-            return portfolio5;
+            return portfolio6;
         }
     }
 }

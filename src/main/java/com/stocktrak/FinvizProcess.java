@@ -11,9 +11,16 @@ import java.util.Calendar;
  * Created by Douglas on 3/9/2015.
  */
 public class FinvizProcess extends Thread {
+    private static final String LOG_TAG = "FinvizProcess";
     private static final long PERIOD_SIZE = 60000;
     private static final int MOVING_AVG_LENGTH = 10;
     private static final double DEFAULT_TRADE_PRICE = 160000;
+
+    private ReadyToUpdatePortfolioListener readyToUpdatePortfolioListener;
+
+    public FinvizProcess(ReadyToUpdatePortfolioListener readyToUpdatePortfolioListener) {
+        this.readyToUpdatePortfolioListener = readyToUpdatePortfolioListener;
+    }
 
     @Override
     public synchronized void start() {
@@ -30,55 +37,60 @@ public class FinvizProcess extends Thread {
         long currentTime;
         while((currentTime = currentTime()) < startOfBusinessDay) {
             try {
-                sleep(PERIOD_SIZE);
+                sleep(1000);
             } catch(InterruptedException e) {
                 System.out.println(e);
             }
         }
         System.out.println("Business day has begun.");
-        finvizInterface.initializeTickerMap(finvizInterface.getPortfolioFive());
+        finvizInterface.initializeTickerMapWithPortfolioSix();
         while((currentTime = currentTime()) < endOfBusinessDay) {
-            try {
-                finvizInterface.downloadPortfolioFive();
-                System.out.println(finvizInterface.getTickerMap());
-                determineTransactions(finvizInterface.getTickerMap());
-                sleep(PERIOD_SIZE);
-            } catch(InterruptedException e) {
-                System.out.println(e);
-            }
+            finvizInterface.downloadPortfolioSixData();
+            TickerMap tickerMap = finvizInterface.getTickerMap();
+            System.out.println(tickerMap);
+            determineTransactions(tickerMap);
+            postAnalysisSleep();
         }
-//        closeAllTrades();
+    }
+
+    public void postAnalysisSleep() {
+        AnalysisProcess.transactionQueue.add(new Transaction(0, "", Transaction.Type.REFRESH));
+        try {
+            sleep(PERIOD_SIZE);
+        } catch(InterruptedException e) {
+            log(e);
+        }
     }
 
     public long currentTime() {
         return Calendar.getInstance().getTimeInMillis();
     }
 
-    public long startOfBusinessDay() {
-        Calendar cal = Calendar.getInstance();
-        cal.set(Calendar.HOUR_OF_DAY, 9);
-        cal.set(Calendar.MINUTE, 30);
-        cal.set(Calendar.SECOND, 0);
-        cal.set(Calendar.MILLISECOND, 0);
-        return cal.getTimeInMillis();
-    }
-
-    public long endOfBusinessDay() {
-        Calendar cal = Calendar.getInstance();
-        cal.set(Calendar.HOUR_OF_DAY, 16);
-        cal.set(Calendar.MINUTE, 0);
-        cal.set(Calendar.SECOND, 0);
-        cal.set(Calendar.MILLISECOND, 0);
-        return cal.getTimeInMillis();
-    }
-
 //    public long startOfBusinessDay() {
-//        return currentTime();
+//        Calendar cal = Calendar.getInstance();
+//        cal.set(Calendar.HOUR_OF_DAY, 9);
+//        cal.set(Calendar.MINUTE, 30);
+//        cal.set(Calendar.SECOND, 0);
+//        cal.set(Calendar.MILLISECOND, 0);
+//        return cal.getTimeInMillis();
 //    }
 //
 //    public long endOfBusinessDay() {
-//        return currentTime() + 20000;
+//        Calendar cal = Calendar.getInstance();
+//        cal.set(Calendar.HOUR_OF_DAY, 16);
+//        cal.set(Calendar.MINUTE, 0);
+//        cal.set(Calendar.SECOND, 0);
+//        cal.set(Calendar.MILLISECOND, 0);
+//        return cal.getTimeInMillis();
 //    }
+
+    public long startOfBusinessDay() {
+        return currentTime();
+    }
+
+    public long endOfBusinessDay() {
+        return currentTime() + 200000;
+    }
 
     public void determineTransactions(TickerMap tickerMap) {
         for(String symbol : tickerMap.getTickers()) {
@@ -121,4 +133,9 @@ public class FinvizProcess extends Thread {
             }
         }
     }
+
+    public void log(Object str) {
+        System.out.println(LOG_TAG + ": " + (str != null ? str.toString() : null));
+    }
+
 }
